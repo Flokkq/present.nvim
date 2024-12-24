@@ -91,6 +91,28 @@ M.start_presentation = function(opts)
 		buffer = float.buf,
 	})
 
+	local restore = {
+		cmdheight = {
+			original = vim.o.cmdheight,
+			present = 0,
+		},
+	}
+
+	-- Set the options we want during presentation
+	for option, config in pairs(restore) do
+		vim.opt[option] = config.present
+	end
+
+	vim.api.nvim_create_autocmd("BufLeave", {
+		buffer = float.buf,
+		callback = function()
+			-- Reset the values when we are done with the presentation
+			for opption, config in pairs(restore) do
+				vim.opt[opption] = config.original
+			end
+		end,
+	})
+
 	vim.api.nvim_buf_set_lines(float.buf, 0, -1, false, parsed.slides[1])
 end
 
