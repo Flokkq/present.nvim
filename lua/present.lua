@@ -17,6 +17,11 @@ end
 ---@class present.Slide
 ---@field title string: The title of the slide
 ---@field body string[]: The body of slide
+---@field blocks present.Block[]: A codeblock inside of a slide
+
+---@class present.Block
+---@field language string: The language of the codeblock
+---@field body string: The body of the codeblock
 
 --- Takes some lines and parses them
 ---@param lines string[]: The lines in the buffer
@@ -26,6 +31,7 @@ local parse_slides = function(lines)
 	local current_slide = {
 		title = "",
 		body = {},
+		blocks = {},
 	}
 
 	local separator = "^#"
@@ -39,6 +45,7 @@ local parse_slides = function(lines)
 			current_slide = {
 				title = line,
 				body = {},
+				blocks = {},
 			}
 		else
 			table.insert(current_slide.body, line)
@@ -46,6 +53,33 @@ local parse_slides = function(lines)
 	end
 
 	table.insert(slides.slides, current_slide)
+
+	for _, slide in ipairs(slides.slides) do
+		local block = {
+			language = nil,
+			body = "",
+		}
+		local inside_block = false
+		for _, line in ipairs(slide.body) do
+			if vim.startswith(line, "```") then
+				if not inside_block then
+					inside_block = true
+					block.language = string.sub(line, 4)
+				else
+					inside_block = false
+					block.body = vim.trim(block.body)
+					table.insert(slide.blocks, block)
+				end
+			else
+				-- OK, we are inside of a current markdown block
+				-- but it is not one of the guards.
+				-- so insert this text
+				if inside_block then
+					block.body = block.body .. line .. "\n"
+				end
+			end
+		end
+	end
 
 	return slides
 end
@@ -166,6 +200,62 @@ M.start_presentation = function(opts)
 		vim.api.nvim_win_close(state.floats.body.win, true)
 	end)
 
+	present_keymap("n", "X", function()
+		local slide = state.parsed.slides[state.current_slide]
+		-- TODO: Make a way for people to execute this for other languages
+		local block = slide.blocks[1]
+		if not block then
+			print("No blocks on this page")
+			return
+		end
+
+		-- Override the default print function, to capture all of the output
+		-- Store the original print function
+		local original_print = print
+		-- Table to capture print messages
+		local output = { "", "# Code", "", "```" .. block.language }
+		vim.list_extend(output, vim.split(block.body, "\n"))
+		table.insert(output, "```")
+
+		-- Redefine the print function
+		print = function(...)
+			local args = { ... }
+			local message = table.concat(vim.tbl_map(tostring, args), "\t")
+			table.insert(output, message)
+		end
+
+		-- Call the provided function
+		local chunk = loadstring(block.body)
+		pcall(function()
+			table.insert(output, "")
+			table.insert(output, "# Output ")
+			table.insert(output, "")
+			if not chunk then
+				table.insert(output, " <<<BROKEN CODE>>>")
+			else
+				chunk()
+			end
+		end)
+
+		-- Restore the original print function
+		print = original_print
+		local buf = vim.api.nvim_create_buf(false, true) -- No file, scratch buffer
+		local temp_width = math.floor(vim.o.columns * 0.8)
+		local temp_height = math.floor(vim.o.lines * 0.8)
+		vim.api.nvim_open_win(buf, true, {
+			relative = "editor",
+			style = "minimal",
+			noautocmd = true,
+			width = temp_width,
+			height = temp_height,
+			row = math.floor((vim.o.lines - temp_height) / 2),
+			col = math.floor((vim.o.columns - temp_width) / 2),
+			border = "rounded",
+		})
+		vim.bo[buf].filetype = "markdown"
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, output)
+	end)
+
 	local restore = {
 		cmdheight = {
 			original = vim.o.cmdheight,
@@ -213,5 +303,7 @@ M.start_presentation = function(opts)
 end
 
 M._parse_slides = parse_slides
+
+M.start_presentation({ bufnr = 35 })
 
 return M
