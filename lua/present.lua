@@ -100,6 +100,10 @@ M.start_presentation = function(opts)
 	local background_float = create_floating_window(windows.background)
 	local header_float = create_floating_window(windows.header)
 	local body_float = create_floating_window(windows.body)
+
+	vim.bo[header_float.buf].filetype = "markdown"
+	vim.bo[body_float.buf].filetype = "markdown"
+
 	local set_slide_content = function(idx)
 		local width = vim.o.columns
 
