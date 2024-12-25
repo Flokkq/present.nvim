@@ -18,6 +18,9 @@
             nativeBuildInputs = [
                 pkgs.git-cliff
                 pkgs.gnupg
+
+                pkgs.gnumake
+                pkgs.act
             ];
           };
         }
