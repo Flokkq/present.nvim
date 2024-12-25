@@ -34,27 +34,37 @@ M.setup = function()
 end
 
 ---@class present.Slides
----@field slides string[]: The slides of the file
+---@field slides present.Slide[]: The slides of the file
+
+---@class present.Slide
+---@field title string: The title of the slide
+---@field body string[]: The body of slide
 
 --- Takes some lines and parses them
 ---@param lines string[]: The lines in the buffer
 ---@return present.Slides
 local parse_slides = function(lines)
 	local slides = { slides = {} }
-	local current_slide = {}
+	local current_slide = {
+		title = "",
+		body = {},
+	}
 
 	local separator = "^#"
 
 	for _, line in ipairs(lines) do
 		if line:find(separator) then
-			if #current_slide > 0 then
+			if #current_slide.title > 0 then
 				table.insert(slides.slides, current_slide)
 			end
 
-			current_slide = {}
+			current_slide = {
+				title = line,
+				body = {},
+			}
+		else
+			table.insert(current_slide.body, line)
 		end
-
-		table.insert(current_slide, line)
 	end
 
 	table.insert(slides.slides, current_slide)
@@ -71,22 +81,33 @@ M.start_presentation = function(opts)
 	local float = create_floating_window()
 
 	local current_slide = 1
+	local set_slide_content = function(idx)
+		local width = vim.o.columns
+
+		local slide = parsed.slides[idx]
+
+		local padding = string.rep(" ", (width - #slide.title) / 2)
+		local title = padding .. slide.title
+		vim.api.nvim_buf_set_lines(header_float.buf, 0, -1, false, { title })
+		vim.api.nvim_buf_set_lines(body_float.buf, 0, -1, false, slide.body)
+	end
+
 	vim.keymap.set("n", "n", function()
 		current_slide = math.min(current_slide + 1, #parsed.slides)
-		vim.api.nvim_buf_set_lines(float.buf, 0, -1, false, parsed.slides[current_slide])
+		set_slide_content(current_slide)
 	end, {
 		buffer = float.buf,
 	})
 
 	vim.keymap.set("n", "p", function()
 		current_slide = math.max(current_slide - 1, 1)
-		vim.api.nvim_buf_set_lines(float.buf, 0, -1, false, parsed.slides[current_slide])
+		set_slide_content(current_slide)
 	end, {
 		buffer = float.buf,
 	})
 
 	vim.keymap.set("n", "q", function()
-		vim.api.nvim_win_close(float.win, true)
+		vim.api.nvim_win_close(body_float.win, true)
 	end, {
 		buffer = float.buf,
 	})
@@ -113,9 +134,9 @@ M.start_presentation = function(opts)
 		end,
 	})
 
-	vim.api.nvim_buf_set_lines(float.buf, 0, -1, false, parsed.slides[1])
+	set_slide_content(current_slide)
 end
 
-M.start_presentation({ bufnr = 72 })
+M.start_presentation({ bufnr = 18 })
 
 return M
