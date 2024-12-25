@@ -93,7 +93,6 @@ M.start_presentation = function(opts)
 
 	local lines = vim.api.nvim_buf_get_lines(opts.bufnr, 0, -1, false)
 	local parsed = parse_slides(lines)
-
 	local current_slide = 1
 
 	local windows = create_window_configurations()
@@ -154,8 +153,26 @@ M.start_presentation = function(opts)
 			for option, config in pairs(restore) do
 				vim.opt[option] = config.original
 			end
+
 			pcall(vim.api.nvim_win_close, background_float.win, true)
 			pcall(vim.api.nvim_win_close, header_float.win, true)
+		end,
+	})
+
+	vim.api.nvim_create_autocmd("VimResized", {
+		group = vim.api.nvim_create_augroup("present-resized", {}),
+		callback = function()
+			if not vim.api.nvim_win_is_valid(body_float.win) or body_float.win == nil then
+				return
+			end
+
+			local updated = create_window_configurations()
+			vim.api.nvim_win_set_config(header_float.win, updated.header)
+			vim.api.nvim_win_set_config(background_float.win, updated.background)
+			vim.api.nvim_win_set_config(body_float.win, updated.body)
+
+			-- Re-calculates current slide contents
+			set_slide_content(current_slide)
 		end,
 	})
 
