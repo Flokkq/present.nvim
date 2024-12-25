@@ -1,30 +1,8 @@
 local M = {}
 
-local function create_floating_window(opts)
-	opts = opts or {}
-	local width = opts.width or math.floor(vim.o.columns * 0.8)
-	local height = opts.height or math.floor(vim.o.lines * 0.8)
-
-	-- Calculate the position to center the window
-	local col = math.floor((vim.o.columns - width) / 2)
-	local row = math.floor((vim.o.lines - height) / 2)
-
-	-- Create a buffer
+local function create_floating_window(config)
 	local buf = vim.api.nvim_create_buf(false, true) -- No file, scratch buffer
-
-	-- Define window configuration
-	local win_config = {
-		relative = "editor",
-		width = width,
-		height = height,
-		col = col,
-		row = row,
-		style = "minimal", -- No borders or extra UI elements
-		border = "rounded",
-	}
-
-	-- Create the floating window
-	local win = vim.api.nvim_open_win(buf, true, win_config)
+	local win = vim.api.nvim_open_win(buf, true, config)
 
 	return { buf = buf, win = win }
 end
@@ -72,15 +50,56 @@ local parse_slides = function(lines)
 	return slides
 end
 
+local create_window_configurations = function()
+	local width = vim.o.columns
+	local height = vim.o.lines
+
+	return {
+		background = {
+			relative = "editor",
+			width = width,
+			height = height,
+			style = "minimal",
+			col = 0,
+			row = 0,
+			zindex = 1,
+		},
+		header = {
+			relative = "editor",
+			width = width,
+			height = 1,
+			style = "minimal",
+			border = "rounded",
+			col = 0,
+			row = 0,
+			zindex = 2,
+		},
+		body = {
+			relative = "editor",
+			width = width - 8,
+			height = height - 5,
+			style = "minimal",
+			border = { " ", " ", " ", " ", " ", " ", " ", " " },
+			col = 8,
+			row = 4,
+		},
+		-- footer = {}
+	}
+end
+
 M.start_presentation = function(opts)
 	opts = opts or {}
 	opts.bufnr = opts.bufnr or 0
 
 	local lines = vim.api.nvim_buf_get_lines(opts.bufnr, 0, -1, false)
 	local parsed = parse_slides(lines)
-	local float = create_floating_window()
 
 	local current_slide = 1
+
+	local windows = create_window_configurations()
+	local background_float = create_floating_window(windows.background)
+	local header_float = create_floating_window(windows.header)
+	local body_float = create_floating_window(windows.body)
 	local set_slide_content = function(idx)
 		local width = vim.o.columns
 
@@ -96,20 +115,20 @@ M.start_presentation = function(opts)
 		current_slide = math.min(current_slide + 1, #parsed.slides)
 		set_slide_content(current_slide)
 	end, {
-		buffer = float.buf,
+		buffer = body_float.buf,
 	})
 
 	vim.keymap.set("n", "p", function()
 		current_slide = math.max(current_slide - 1, 1)
 		set_slide_content(current_slide)
 	end, {
-		buffer = float.buf,
+		buffer = body_float.buf,
 	})
 
 	vim.keymap.set("n", "q", function()
 		vim.api.nvim_win_close(body_float.win, true)
 	end, {
-		buffer = float.buf,
+		buffer = body_float.buf,
 	})
 
 	local restore = {
@@ -125,12 +144,14 @@ M.start_presentation = function(opts)
 	end
 
 	vim.api.nvim_create_autocmd("BufLeave", {
-		buffer = float.buf,
+		buffer = body_float.buf,
 		callback = function()
 			-- Reset the values when we are done with the presentation
-			for opption, config in pairs(restore) do
-				vim.opt[opption] = config.original
+			for option, config in pairs(restore) do
+				vim.opt[option] = config.original
 			end
+			pcall(vim.api.nvim_win_close, background_float.win, true)
+			pcall(vim.api.nvim_win_close, header_float.win, true)
 		end,
 	})
 
