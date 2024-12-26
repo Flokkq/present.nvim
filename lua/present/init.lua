@@ -9,16 +9,11 @@ M.setup = function()
 	-- nothing
 end
 
-M.start_presentation = function(opts)
-	opts = opts or {}
-	opts.bufnr = opts.bufnr or 0
-
-	state.active = true
-
-	local lines = vim.api.nvim_buf_get_lines(opts.bufnr, 0, -1, false)
-	state.parsed = slides.parse(lines)
+-- Reusable function to initialize the presentation environment
+local function initialize_presentation(parsed_slides, title)
+	state.parsed = parsed_slides
 	state.current_slide = 1
-	state.title = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(opts.bufnr), ":t")
+	state.title = title
 
 	local windows = window.create_window_configurations()
 	state.floats.background = window.create_floating_window(windows.background)
@@ -33,7 +28,22 @@ M.start_presentation = function(opts)
 	slides.set_slide_content(state.current_slide)
 end
 
-M.show_help = commands.show_help
+M.start_presentation = function(opts)
+	opts = opts or {}
+	opts.bufnr = opts.bufnr or 0
+
+	state.active = true
+
+	local lines = vim.api.nvim_buf_get_lines(opts.bufnr, 0, -1, false)
+	local parsed_slides = slides.parse(lines)
+	local title = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(opts.bufnr), ":t")
+
+	initialize_presentation(parsed_slides, title)
+end
+
+M.show_help = function()
+	commands.show_help(initialize_presentation)
+end
 
 M._parse_slides = slides.parse
 

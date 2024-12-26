@@ -4,5 +4,5 @@ end, {})
 
 vim.api.nvim_create_user_command("PresentHelp", function()
 	require("present.state").active = false -- Ensure standalone mode
-	require("present.commands").show_help()
+	require("present").show_help()
 end, {})
