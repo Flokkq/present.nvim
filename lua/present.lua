@@ -184,56 +184,8 @@ M.start_presentation = function(opts)
 	state.floats.footer = create_floating_window(windows.footer)
 
 	foreach_float(function(_, float)
-		vim.bo[float.buf].filetype = "markdown"
-		vim.bo[float.buf].buftype = "nofile"
-		vim.bo[float.buf].bufhidden = "wipe"
-		vim.bo[float.buf].modifiable = false
+		M.configure_slide_buffer(float)
 	end)
-
-	M.configure_keybindings()
-
-	local restore = {
-		cmdheight = {
-			original = vim.o.cmdheight,
-			present = 0,
-		},
-	}
-
-	-- Set the options we want during presentation
-	for option, config in pairs(restore) do
-		vim.opt[option] = config.present
-	end
-
-	vim.api.nvim_create_autocmd("BufLeave", {
-		buffer = state.floats.body.buf,
-		callback = function()
-			-- Reset the values when we are done with the presentation
-			for option, config in pairs(restore) do
-				vim.opt[option] = config.original
-			end
-
-			foreach_float(function(_, float)
-				pcall(vim.api.nvim_win_close, float.win, true)
-			end)
-		end,
-	})
-
-	vim.api.nvim_create_autocmd("VimResized", {
-		group = vim.api.nvim_create_augroup("present-resized", {}),
-		callback = function()
-			if not vim.api.nvim_win_is_valid(state.floats.body.win) or state.floats.body.win == nil then
-				return
-			end
-
-			local updated = create_window_configurations()
-
-			foreach_float(function(name, _)
-				vim.api.nvim_win_set_config(state.floats[name].win, updated[name])
-			end)
-
-			set_slide_content(state.current_slide)
-		end,
-	})
 
 	set_slide_content(state.current_slide)
 end
@@ -310,7 +262,60 @@ M.execute = function()
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, output)
 end
 
-M.configure_keybindings = function()
+---@private
+M.configure_slide_buffer = function(window)
+	local buf = window.buf
+
+	assert(buf, "Must have a slide buffer")
+
+	vim.bo[buf].filetype = "markdown"
+	vim.bo[buf].buftype = "nofile"
+	vim.bo[buf].bufhidden = "wipe"
+	vim.bo[buf].modifiable = false
+
+	local restore = {
+		cmdheight = {
+			original = vim.o.cmdheight,
+			present = 0,
+		},
+	}
+
+	-- Set the options we want during presentation
+	for option, config in pairs(restore) do
+		vim.opt[option] = config.present
+	end
+
+	vim.api.nvim_create_autocmd("BufLeave", {
+		buffer = state.floats.body.buf,
+		callback = function()
+			-- Reset the values when we are done with the presentation
+			for option, config in pairs(restore) do
+				vim.opt[option] = config.original
+			end
+
+			foreach_float(function(_, float)
+				pcall(vim.api.nvim_win_close, float.win, true)
+			end)
+		end,
+	})
+
+	vim.api.nvim_create_autocmd("VimResized", {
+		group = vim.api.nvim_create_augroup("present-resized", {}),
+		callback = function()
+			if not vim.api.nvim_win_is_valid(state.floats.body.win) or state.floats.body.win == nil then
+				return
+			end
+
+			local updated = create_window_configurations()
+
+			foreach_float(function(name, _)
+				vim.api.nvim_win_set_config(state.floats[name].win, updated[name])
+			end)
+
+			set_slide_content(state.current_slide)
+		end,
+	})
+
 	local keybindings = {
 		n = M.next,
 		p = M.previous,
