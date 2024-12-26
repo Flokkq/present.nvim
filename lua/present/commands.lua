@@ -5,12 +5,22 @@ local window = require("present.window")
 local M = {}
 
 local next = function()
-	state.current_slide = math.min(state.current_slide + 1, #state.parsed.slides)
+	if state.current_slide >= #state.parsed.slides then
+		state.current_slide = 1
+	else
+		state.current_slide = math.min(state.current_slide + 1, #state.parsed.slides)
+	end
+
 	slides.set_slide_content(state.current_slide)
 end
 
 local previous = function()
-	state.current_slide = math.max(state.current_slide - 1, 1)
+	if state.current_slide - 1 <= 0 then
+		state.current_slide = #state.parsed.slides
+	else
+		state.current_slide = math.max(state.current_slide - 1, 1)
+	end
+
 	slides.set_slide_content(state.current_slide)
 end
 
