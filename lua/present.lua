@@ -146,6 +146,26 @@ local foreach_float = function(cb)
 	end
 end
 
+local set_slide_content = function(idx)
+	local width = vim.o.columns
+
+	local slide = state.parsed.slides[idx]
+
+	local padding = string.rep(" ", (width - #slide.title) / 2)
+	local title = padding .. slide.title
+	local footer = string.format(" %s / %d | %s", "#" .. state.current_slide, #state.parsed.slides, state.title)
+
+	foreach_float(function(_, float)
+		vim.bo[float.buf].modifiable = true
+	end)
+
+	vim.api.nvim_buf_set_lines(state.floats.header.buf, 0, -1, false, { title })
+	vim.api.nvim_buf_set_lines(state.floats.body.buf, 0, -1, false, slide.body)
+	vim.api.nvim_buf_set_lines(state.floats.footer.buf, 0, -1, false, { footer })
+
+	foreach_float(function(_, float)
+		vim.bo[float.buf].modifiable = false
+	end)
 end
 
 M.start_presentation = function(opts)
@@ -167,22 +187,8 @@ M.start_presentation = function(opts)
 		vim.bo[float.buf].filetype = "markdown"
 		vim.bo[float.buf].buftype = "nofile"
 		vim.bo[float.buf].bufhidden = "wipe"
+		vim.bo[float.buf].modifiable = false
 	end)
-
-	local set_slide_content = function(idx)
-		local width = vim.o.columns
-
-		local slide = state.parsed.slides[idx]
-
-		local padding = string.rep(" ", (width - #slide.title) / 2)
-		local title = padding .. slide.title
-
-		vim.api.nvim_buf_set_lines(state.floats.header.buf, 0, -1, false, { title })
-		vim.api.nvim_buf_set_lines(state.floats.body.buf, 0, -1, false, slide.body)
-
-		local footer = string.format(" %s / %d | %s", "#" .. state.current_slide, #state.parsed.slides, state.title)
-		vim.api.nvim_buf_set_lines(state.floats.footer.buf, 0, -1, false, { footer })
-	end
 
 	M.configure_keybindings()
 
