@@ -1,48 +1,27 @@
-# git-cliff template
+# `present.nvim`
 
-Template repo for using [git-cliff](https://github.com/orhun/git-cliff)
+A minimalist Neovim plugin for presenting markdown slides. Make sure to 
 
-## Prerequisites
+## Setup
 
-Before you begin, ensure that you have the following tools installed:
+Add the following configuration to use `present.nvim`. Use these keybindings during your presentation:
 
-- **gpg**: For signing commits and tags.
-- **git-cliff**: For generating changelogs based on commit messages.
-- **nix**: Each assignment comes with a flake.nix (easily install dependencies)  
+| Key |    Description                         |
+|------|---------------------------------------|
+| `n`   | Move to the next slide             |
+| `p`   | Move to the previous slide         |
+| `q`   | Quit the presentation              |
+| `X`   | Execute the first code block       |
+| `?` |   Show all available keybindings     |
 
-### Installing Dependencies
+## Installation with Lazy.nvim
 
-You can install all necessary tools using Nix by running:
+To install `present.nvim` using [Lazy.nvim](https://github.com/folke/lazy.nvim):
 
-```bash
-nix develop .
+```lua
+{
+  "flokkq/present.nvim",
+  version = "*", -- Or specify a semver like "v1.0.0"
+}
 ```
-
-This command will set up the development environment with `gpg` and `git-cliff` installed, as specified in the `flake.nix` file.
-
-## Commit Message Guidelines
-
-To maintain a consistent and meaningful commit history, adhere to the following commit message conventions. Each commit message should start with one of the predefined prefixes:
-
-| Prefix     | Description                  |
-|------------|------------------------------|
-| `feat`     | :sparkles: **Features**      |
-| `fix`      | :bug: **Bug Fixes**          |
-| `refactor` | :tractor: **Refactoring**    |
-| `init`     | :tada: **Initial Commit**    |
-| `style`    | :art: **Styling**            |
-| `revert`   | :rewind: **Reverts**         |
-| `chore`    | :wrench: **Chore**           |
-
-**Note:** Use lowercase letters for prefixes and follow them with a colon and a space.
-
-## Release Process
-
-Releasing a new assignment version is straightforward. Follow these steps to create a new release:
-
-```bash
-    ./release.sh vx.y.z-assignmentName
-    git push && git push --tags
-```
-
-If you are encountering any issues feel free to look at the [git-cliff docs](https://github.com/orhun/git-cliff.git)
+That's it! Start presenting with `:PresentStart`.
