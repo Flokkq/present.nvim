@@ -19,7 +19,7 @@ Add the following configuration to use `present.nvim`. Use these keybindings dur
 ```lua
 {
   "flokkq/present.nvim",
-  version = "v0.1.0", 
+  version = "v0.2.0", 
 }
 ```
 
@@ -28,7 +28,7 @@ Add the following configuration to use `present.nvim`. Use these keybindings dur
 ```lua
 use {
   "flokkq/present.nvim",
-  tag = "v0.1.0",
+  tag = "v0.2.0",
 }
 ```
 

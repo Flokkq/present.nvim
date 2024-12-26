@@ -1,6 +1,24 @@
 # Changelog
 
 
+## [0.2.0](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/compare/v0.1.0..v0.2.0) - 2024-12-26
+
+
+
+
+### ✨ Features
+
+- *(command)* Add help command and keybind - ([7a909ec](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/7a909ec11a6958144a65d134514e4333ce5b28f6))
+
+### 🔧Chores
+
+- *(cliff)* Update version references in README when bumping version - ([676124b](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/676124b163767f52c3393d4374c02c64b90968d0))
+
+### 🚜 Refactoring
+
+- *(ui)* Modularize ui creation - ([77895db](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/77895db7e0020800c8e568b36ddac1eb8b4a6188))
+
+
 ## [0.1.0] - 2024-12-26
 
 
@@ -27,6 +45,7 @@
 
 ### 🔧Chores
 
+- *(release)* Prepare for v0.1.0 - ([c539211](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/c53921128ad54ad9e49e70b8ced068591c710f20))
 - *(repo)* Update README with install steps for packer and plug - ([25ddf52](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/25ddf522b9e63a92c88ab088548a72e3d3b070de))
 - *(repo)* Add proper README - ([f0fd252](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/f0fd252e60b5c4c5861b9099bcec505d1bdca47c))
 - *(ci)* Run unit_tests on push - ([84a1f0a](https://github.com/Flokkq/https://github.com/orhun/git-cliff/blob/main/cliff.toml/commit/84a1f0a894a8f01b9ed5bcd97554fab215dcfeab))
