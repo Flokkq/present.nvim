@@ -1,6 +1,6 @@
 # `present.nvim`
 
-A minimalist Neovim plugin for presenting markdown slides. Make sure to 
+A minimalist Neovim plugin for presenting markdown slides. You can start presenting with `:PresentStart`.
 
 ## Setup
 
@@ -14,14 +14,26 @@ Add the following configuration to use `present.nvim`. Use these keybindings dur
 | `X`   | Execute the first code block       |
 | `?` |   Show all available keybindings     |
 
-## Installation with Lazy.nvim
-
-To install `present.nvim` using [Lazy.nvim](https://github.com/folke/lazy.nvim):
+### Installation using [Lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
 {
   "flokkq/present.nvim",
-  version = "*", -- Or specify a semver like "v1.0.0"
+  version = "*", -- Or specify a semver like "v0.1.0"
 }
 ```
-That's it! Start presenting with `:PresentStart`.
+
+### Installation using [Packer.nvim](https://github.com/wbthomason/packer.nvim)
+
+```lua
+use {
+  "flokkq/present.nvim",
+  tag = "v0.1.0", -- Or use "*"
+}
+```
+
+### Installation using [vim-plug](https://github.com/junegunn/vim-plug)
+
+```vim
+Plug 'flokkq/present.nvim'
+```
