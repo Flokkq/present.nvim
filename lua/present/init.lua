@@ -13,6 +13,8 @@ M.start_presentation = function(opts)
 	opts = opts or {}
 	opts.bufnr = opts.bufnr or 0
 
+	state.active = true
+
 	local lines = vim.api.nvim_buf_get_lines(opts.bufnr, 0, -1, false)
 	state.parsed = slides.parse(lines)
 	state.current_slide = 1
@@ -30,6 +32,8 @@ M.start_presentation = function(opts)
 
 	slides.set_slide_content(state.current_slide)
 end
+
+M.show_help = commands.show_help
 
 M._parse_slides = slides.parse
 

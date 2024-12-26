@@ -4,6 +4,7 @@ local M = {
 	title = "",
 	parsed = { slides = {} },
 	floats = {},
+	active = false,
 }
 
 return M

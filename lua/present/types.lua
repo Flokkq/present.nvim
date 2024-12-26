@@ -11,7 +11,8 @@
 ---@field body string: The body of the codeblock
 
 ---@class present.State
----@field current_slide number The index of the current slide
----@field title string The title of the presentation
----@field parsed present.Slides The parsed slides of the presentation
----@field floats table<string, { buf: number, win: number }> A table containing the floating window buffers and windows
+---@field current_slide number: The index of the current slide
+---@field title string: The title of the presentation
+---@field parsed present.Slides: The parsed slides of the presentation
+---@field floats table<string, { buf: number, win: number }>: A table containing the floating window buffers and windows
+---@field active boolean: Tracks if we are in presentation mode

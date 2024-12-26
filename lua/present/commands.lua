@@ -84,6 +84,70 @@ local execute_block = function()
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, output)
 end
 
+M.show_help = function()
+	local keybindings = {
+		{ key = "n", desc = "Next slide" },
+		{ key = "p", desc = "Previous slide" },
+		{ key = "q", desc = "Quit presentation" },
+		{ key = "X", desc = "Execute the first code block" },
+		{ key = "?", desc = "Show this help menu" },
+	}
+
+	local help_content = { "# Present.nvim Keybindings:", "" }
+
+	table.insert(help_content, "| Key | Description |")
+	table.insert(help_content, "|-----|-------------|")
+	for _, binding in ipairs(keybindings) do
+		table.insert(help_content, string.format("| %s | %s |", binding.key, binding.desc))
+	end
+
+	if state.active then
+		local help_slide = {
+			title = "Help",
+			body = help_content,
+			blocks = {},
+		}
+
+		table.insert(state.parsed.slides, state.current_slide + 1, help_slide)
+		state.current_slide = state.current_slide + 1
+		slides.set_slide_content(state.current_slide)
+
+		vim.keymap.set("n", "x", function()
+			if state.parsed.slides[state.current_slide].title == "Help" then
+				table.remove(state.parsed.slides, state.current_slide)
+				state.current_slide = math.max(state.current_slide - 1, 1)
+				slides.set_slide_content(state.current_slide)
+			end
+		end, { buffer = state.floats.body.buf, nowait = true, noremap = true, silent = true })
+	else
+		state.active = true
+
+		state.parsed = {
+			slides = {
+				{
+					title = "Help",
+					body = help_content,
+					blocks = {},
+				},
+			},
+		}
+		state.current_slide = 1
+		state.title = "Help Menu"
+
+		local windows = window.create_window_configurations()
+		state.floats.background = window.create_floating_window(windows.background)
+		state.floats.header = window.create_floating_window(windows.header)
+		state.floats.body = window.create_floating_window(windows.body, true)
+		state.floats.footer = window.create_floating_window(windows.footer)
+
+		window.foreach_float(function(_, float)
+			M.configure_slide_buffer(float)
+		end)
+
+		slides.set_slide_content(state.current_slide)
+	end
+end
+
 M.configure_slide_buffer = function(win)
 	local buf = win.buf
 
@@ -141,7 +205,10 @@ M.configure_slide_buffer = function(win)
 		n = next,
 		p = previous,
 		q = quit,
+		["<ESC>"] = quit,
 		X = execute_block,
+		h = M.show_help,
+		["?"] = M.show_help,
 	}
 
 	for key, func in pairs(keybindings) do
