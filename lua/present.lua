@@ -169,6 +169,8 @@ M.start_presentation = function(opts)
 
 	foreach_float(function(_, float)
 		vim.bo[float.buf].filetype = "markdown"
+		vim.bo[float.buf].buftype = "nofile"
+		vim.bo[float.buf].bufhidden = "wipe"
 	end)
 
 	local set_slide_content = function(idx)
@@ -304,6 +306,5 @@ end
 
 M._parse_slides = parse_slides
 
-M.start_presentation({ bufnr = 35 })
 
 return M
