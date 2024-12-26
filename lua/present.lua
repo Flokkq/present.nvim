@@ -146,10 +146,6 @@ local foreach_float = function(cb)
 	end
 end
 
-local present_keymap = function(mode, key, callback)
-	vim.keymap.set(mode, key, callback, {
-		buffer = state.floats.body.buf,
-	})
 end
 
 M.start_presentation = function(opts)
@@ -188,75 +184,7 @@ M.start_presentation = function(opts)
 		vim.api.nvim_buf_set_lines(state.floats.footer.buf, 0, -1, false, { footer })
 	end
 
-	present_keymap("n", "n", function()
-		state.current_slide = math.min(state.current_slide + 1, #state.parsed.slides)
-		set_slide_content(state.current_slide)
-	end)
-
-	present_keymap("n", "p", function()
-		state.current_slide = math.max(state.current_slide - 1, 1)
-		set_slide_content(state.current_slide)
-	end)
-
-	present_keymap("n", "q", function()
-		vim.api.nvim_win_close(state.floats.body.win, true)
-	end)
-
-	present_keymap("n", "X", function()
-		local slide = state.parsed.slides[state.current_slide]
-		-- TODO: Make a way for people to execute this for other languages
-		local block = slide.blocks[1]
-		if not block then
-			print("No blocks on this page")
-			return
-		end
-
-		-- Override the default print function, to capture all of the output
-		-- Store the original print function
-		local original_print = print
-		-- Table to capture print messages
-		local output = { "", "# Code", "", "```" .. block.language }
-		vim.list_extend(output, vim.split(block.body, "\n"))
-		table.insert(output, "```")
-
-		-- Redefine the print function
-		print = function(...)
-			local args = { ... }
-			local message = table.concat(vim.tbl_map(tostring, args), "\t")
-			table.insert(output, message)
-		end
-
-		-- Call the provided function
-		local chunk = loadstring(block.body)
-		pcall(function()
-			table.insert(output, "")
-			table.insert(output, "# Output ")
-			table.insert(output, "")
-			if not chunk then
-				table.insert(output, " <<<BROKEN CODE>>>")
-			else
-				chunk()
-			end
-		end)
-
-		-- Restore the original print function
-		print = original_print
-		local buf = vim.api.nvim_create_buf(false, true) -- No file, scratch buffer
-		local temp_width = math.floor(vim.o.columns * 0.8)
-		local temp_height = math.floor(vim.o.lines * 0.8)
-		vim.api.nvim_open_win(buf, true, {
-			relative = "editor",
-			style = "minimal",
-			noautocmd = true,
-			width = temp_width,
-			height = temp_height,
-			row = math.floor((vim.o.lines - temp_height) / 2),
-			col = math.floor((vim.o.columns - temp_width) / 2),
-			border = "rounded",
-		})
-		vim.bo[buf].filetype = "markdown"
-		vim.api.nvim_buf_set_lines(buf, 0, -1, false, output)
-	end)
+	M.configure_keybindings()
 
 	local restore = {
 		cmdheight = {
@@ -306,5 +234,87 @@ end
 
 M._parse_slides = parse_slides
 
+M.next = function()
+	state.current_slide = math.min(state.current_slide + 1, #state.parsed.slides)
+	set_slide_content(state.current_slide)
+end
+
+M.previous = function()
+	state.current_slide = math.max(state.current_slide - 1, 1)
+	set_slide_content(state.current_slide)
+end
+
+M.quit = function()
+	vim.api.nvim_win_close(state.floats.body.win, true)
+end
+
+M.execute = function()
+	local slide = state.parsed.slides[state.current_slide]
+	-- TODO: Make a way for people to execute this for other languages
+	local block = slide.blocks[1]
+	if not block then
+		print("No blocks on this page")
+		return
+	end
+
+	-- Override the default print function, to capture all of the output
+	-- Store the original print function
+	local original_print = print
+	-- Table to capture print messages
+	local output = { "", "# Code", "", "```" .. block.language }
+	vim.list_extend(output, vim.split(block.body, "\n"))
+	table.insert(output, "```")
+
+	-- Redefine the print function
+	print = function(...)
+		local args = { ... }
+		local message = table.concat(vim.tbl_map(tostring, args), "\t")
+		table.insert(output, message)
+	end
+
+	-- Call the provided function
+	local chunk = loadstring(block.body)
+	pcall(function()
+		table.insert(output, "")
+		table.insert(output, "# Output ")
+		table.insert(output, "")
+		if not chunk then
+			table.insert(output, " <<<BROKEN CODE>>>")
+		else
+			chunk()
+		end
+	end)
+
+	-- Restore the original print function
+	print = original_print
+	local buf = vim.api.nvim_create_buf(false, true) -- No file, scratch buffer
+	local temp_width = math.floor(vim.o.columns * 0.8)
+	local temp_height = math.floor(vim.o.lines * 0.8)
+	vim.api.nvim_open_win(buf, true, {
+		relative = "editor",
+		style = "minimal",
+		noautocmd = true,
+		width = temp_width,
+		height = temp_height,
+		row = math.floor((vim.o.lines - temp_height) / 2),
+		col = math.floor((vim.o.columns - temp_width) / 2),
+		border = "rounded",
+	})
+	vim.bo[buf].filetype = "markdown"
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, output)
+end
+
+M.configure_keybindings = function()
+	local keybindings = {
+		n = M.next,
+		p = M.previous,
+		q = M.quit,
+		X = M.execute_block,
+	}
+
+	for key, func in pairs(keybindings) do
+		vim.keymap.set("n", key, func, { buffer = state.floats.body.buf })
+	end
+end
 
 return M
